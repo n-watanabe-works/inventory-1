@@ -158,10 +158,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
 @media (min-width: 769px) {
   .sp-nav { display: none; }
   .page { padding: 0; }
+  /* PC：カードを隠す */
+  .log-cards { display: none; }
 }
-/* PC：カードを隠す（スマホでのみ表示） */
-.log-cards { display: none; }
 /* ログカード（スマホ用） */
+.log-cards { flex-direction: column; gap: 10px; }
 .log-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 12px 14px; }
 .log-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .log-card-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; word-break: break-word; }
