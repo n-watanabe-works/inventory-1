@@ -84,7 +84,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
 .empty-master { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
 /* 履歴テーブル */
 .log-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e8e8e8; }
-.log-table th { background: #f5f5f5; font-size: 12px; color: #888; font-weight: 600; padding: 10px 16px; text-align: left; border-bottom: 1px solid #e8e8e8; }
+.log-table th { background: #f5f5f5; font-size: 12px; color: #888; font-weight: 600; padding: 10px 16px; text-align: left; border-bottom: 1px solid #e8e8e8; white-space: nowrap; }
 .log-table td { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid #f5f5f5; }
 .log-table tr:last-child td { border-bottom: none; }
 .log-plus { color: #2e7d32; font-weight: 600; }
@@ -417,10 +417,12 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
       </div>
       <div id="log-content">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table class="log-table">
           <thead><tr><th>日時</th><th>品名</th><th>種別</th><th>数量</th><th>担当者</th><th>内容</th><th></th></tr></thead>
           <tbody id="log-body"><tr><td colspan="6" style="text-align:center;padding:40px;color:#aaa">まだ記録がありません</td></tr></tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -648,7 +650,8 @@ function toggleAlertFilter() {
 
 function setOrderStatus(itemId, status) {
   const item = items.find(i => i.id === itemId);
-  if (item.orderStatus.startsWith('ordered')) {
+  if (!item) return;
+  if ((item.orderStatus || '').startsWith('ordered')) {
     // 既に発注済みならキャンセル
     item.orderStatus = '';
     if (gasConnected) gasPost({ action: 'updateItem', item }).catch(() => {});
@@ -691,7 +694,7 @@ function renderItems() {
     const isAlert = item.minStock > 0 && item.stock > 0 && item.stock <= item.minStock;
     const propTags = item.properties.map(p => `<span class="tag tag-prop">${p}</span>`).join('');
     const memoHtml = item.memo ? `<div class="item-memo">${item.memo}</div>` : '';
-    const isOrdered = item.orderStatus.startsWith('ordered');
+    const isOrdered = (item.orderStatus || '').startsWith('ordered');
     const orderedParts = isOrdered ? item.orderStatus.split(':') : [];
     const orderedQty = orderedParts[1] || '';
     const orderedDate = orderedParts[2] || '';
@@ -737,13 +740,15 @@ function renderItems() {
   }).join('');
 }
 
-function formatDate(dateStr) {
+function formatDate(dateStr, dateOnly = false) {
   if (!dateStr) return '';
-  // ISO形式（2026-04-20T12:34:00.000Z）の場合はJSTに変換して年月日のみ返す
+  // ISO形式（2026-04-20T12:34:00.000Z）の場合はJSTに変換
   if (String(dateStr).includes('T')) {
     const d = new Date(dateStr);
     const jst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
-    return `${jst.getUTCFullYear()}/${String(jst.getUTCMonth()+1).padStart(2,'0')}/${String(jst.getUTCDate()).padStart(2,'0')}`;
+    const date = `${jst.getUTCFullYear()}/${String(jst.getUTCMonth()+1).padStart(2,'0')}/${String(jst.getUTCDate()).padStart(2,'0')}`;
+    if (dateOnly) return date;
+    return `${date} ${String(jst.getUTCHours()).padStart(2,'0')}:${String(jst.getUTCMinutes()).padStart(2,'0')}`;
   }
   return dateStr;
 }
@@ -865,7 +870,7 @@ function renderLogs() {
       <td class="${isIn?'log-plus':'log-minus'}">${isIn?'+':'-'}${l.qty}</td>
       <td>${l.staff}</td>
       <td style="color:#888;font-size:12px">${l.note||''}</td>
-      <td><button onclick="deleteLog(${originalIndex})" style="height:26px;padding:0 10px;border-radius:6px;border:1px solid #f0c0c0;font-size:11px;cursor:pointer;background:#fff;color:#c0392b">取消</button></td>
+      <td style="white-space:nowrap"><button onclick="deleteLog(${originalIndex})" style="height:26px;padding:0 10px;border-radius:6px;border:1px solid #f0c0c0;font-size:11px;cursor:pointer;background:#fff;color:#c0392b;white-space:nowrap;line-height:1">取消</button></td>
     </tr>`;
   }).join('');
 }
@@ -1746,7 +1751,7 @@ function renderRestoration() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700;margin-bottom:4px">${p.name}</div>
-          <div style="font-size:12px;color:#888">📅 ${formatDate(p.date)}　👤 ${p.staff}</div>
+          <div style="font-size:12px;color:#888">📅 ${formatDate(p.date, true)}　👤 ${p.staff}</div>
         ${p.memo ? `<div style="font-size:12px;color:#555;margin-top:4px">📝 ${p.memo}</div>` : ''}
         </div>
         <span style="font-size:11px;padding:3px 10px;border-radius:99px;background:${statusColor}20;color:${statusColor};font-weight:600;white-space:nowrap">${statusLabel}</span>
@@ -1870,7 +1875,8 @@ function saveProject() {
     const projectId = 'proj_' + Date.now();
     const project = { id: projectId, name, date, staff, memo, status: 'active', usedItems, createdAt: now() };
     projects.push(project);
-    if (projects.length > 10) projects.shift();
+    // ★ 以前あった「10件超で古いプロジェクトを自動削除」を撤廃
+    //   在庫の戻し処理をせずに消えて restorationStock の計算が狂うバグの原因だったため
 
     const dateStr = now();
     const newTasks = [];
@@ -2036,8 +2042,8 @@ function recalcRestorationStock() {
       if (!item) return;
       const shortageQty = tasks
         .filter(t => t.projectId === p.id && t.itemId === u.id && t.status === 'shortage')
-        .reduce((s, t) => s + t.qty, 0);
-      const actualQty = Math.max(0, u.qty - shortageQty);
+        .reduce((s, t) => s + (parseInt(t.qty) || 0), 0);
+      const actualQty = Math.max(0, (parseInt(u.qty) || 0) - shortageQty);
       item.restorationStock += actualQty;
     });
   });
@@ -2150,6 +2156,7 @@ let gasConnected = false;
 
 async function gasGet(action) {
   const res = await fetch(`${GAS_URL}?action=${action}`);
+  if (!res.ok) throw new Error(`GAS GET ${action} failed: ${res.status}`);
   return await res.json();
 }
 
@@ -2158,6 +2165,7 @@ async function gasPost(data) {
     method: 'POST',
     body: JSON.stringify(data)
   });
+  if (!res.ok) throw new Error(`GAS POST ${data.action} failed: ${res.status}`);
   return await res.json();
 }
 
@@ -2214,16 +2222,41 @@ async function loadFromSheet() {
       await gasPost({ action: 'saveStaff', staffList });
     }
 
-    // プロジェクト
+    // プロジェクト（型を正規化：usedItems の id・qty を数値化）
     projects.length = 0;
     if (result.projects && result.projects.length > 0) {
-      result.projects.forEach(p => projects.push(p));
+      result.projects.forEach(p => {
+        const usedItems = (p.usedItems || []).map(u => ({
+          id: parseInt(u.id),
+          name: u.name,
+          qty: parseInt(u.qty) || 0
+        }));
+        projects.push({
+          id: p.id,
+          name: p.name,
+          date: p.date,
+          staff: p.staff,
+          memo: p.memo || '',
+          status: p.status || 'active',
+          createdAt: p.createdAt || '',
+          usedItems
+        });
+      });
     }
 
-    // タスク
+    // タスク（型を正規化：itemId・qty を数値化）
     tasks.length = 0;
     if (result.tasks && result.tasks.length > 0) {
-      result.tasks.forEach(t => tasks.push(t));
+      result.tasks.forEach(t => tasks.push({
+        id: t.id,
+        projectId: t.projectId,
+        projectName: t.projectName,
+        itemId: parseInt(t.itemId),
+        itemName: t.itemName,
+        qty: parseInt(t.qty) || 0,
+        status: t.status || 'pending',
+        createdAt: t.createdAt || ''
+      }));
     }
 
     // 設備種類・物件名
