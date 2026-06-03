@@ -148,6 +148,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
   .master-list { margin: 0 16px 16px; }
   #log-content { padding: 16px; }
   .log-table th, .log-table td { padding: 10px; font-size: 12px; }
+  /* スマホ：表を隠してカード表示 */
+  .log-table-wrap { display: none; }
+  .log-cards { display: flex; flex-direction: column; gap: 10px; }
   .modal { border-radius: 20px 20px 0 0; position: fixed; bottom: 0; left: 0; right: 0; max-width: 100%; max-height: 92vh; padding: 24px 20px 40px; }
   .modal-bg.open { align-items: flex-end; }
   .page-header { margin-bottom: 12px; }
@@ -156,6 +159,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-ser
   .sp-nav { display: none; }
   .page { padding: 0; }
 }
+/* PC：カードを隠す（スマホでのみ表示） */
+.log-cards { display: none; }
+/* ログカード（スマホ用） */
+.log-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 12px 14px; }
+.log-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.log-card-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; word-break: break-word; }
+.log-card-meta { font-size: 12px; color: #888; }
+.log-card-qty { font-size: 13px; font-weight: 600; white-space: nowrap; }
+.log-card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0; }
+.log-card-note { font-size: 12px; color: #999; flex: 1; word-break: break-word; }
+.log-card-del { height: 28px; padding: 0 12px; font-size: 12px; border-radius: 6px; border: 1px solid #f0c0c0; background: #fff; color: #c0392b; line-height: 1; white-space: nowrap; flex-shrink: 0; margin-left: 8px; }
 /* number inputの上下矢印を非表示 */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -417,12 +431,15 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
       </div>
       <div id="log-content">
-        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <!-- PC用：表形式 -->
+        <div class="log-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table class="log-table">
           <thead><tr><th>日時</th><th>品名</th><th>種別</th><th>数量</th><th>担当者</th><th>内容</th><th></th></tr></thead>
           <tbody id="log-body"><tr><td colspan="6" style="text-align:center;padding:40px;color:#aaa">まだ記録がありません</td></tr></tbody>
         </table>
         </div>
+        <!-- スマホ用：カード形式 -->
+        <div id="log-cards" class="log-cards"></div>
       </div>
     </div>
 
@@ -851,8 +868,10 @@ function renderLogs() {
     const matchQ = !q || l.itemName.toLowerCase().includes(q);
     return matchType && matchStaff && matchQ;
   });
+  const cardsEl = document.getElementById('log-cards');
   if (!filtered.length) {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#aaa">該当する履歴がありません</td></tr>';
+    if (cardsEl) cardsEl.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">該当する履歴がありません</div>';
     return;
   }
   // 日付で降順ソート（最新が上）
@@ -860,6 +879,7 @@ function renderLogs() {
     const da = new Date(a.date), db = new Date(b.date);
     return db - da;
   });
+  // PC用：表
   tbody.innerHTML = sorted.map(l => {
     const isIn = l.type==='in';
     const originalIndex = logs.indexOf(l);
@@ -873,6 +893,26 @@ function renderLogs() {
       <td style="white-space:nowrap"><button onclick="deleteLog(${originalIndex})" style="height:26px;padding:0 10px;border-radius:6px;border:1px solid #f0c0c0;font-size:11px;cursor:pointer;background:#fff;color:#c0392b;white-space:nowrap;line-height:1">取消</button></td>
     </tr>`;
   }).join('');
+  // スマホ用：カード
+  if (cardsEl) {
+    cardsEl.innerHTML = sorted.map(l => {
+      const isIn = l.type==='in';
+      const originalIndex = logs.indexOf(l);
+      return `<div class="log-card">
+        <div class="log-card-top">
+          <div style="flex:1;min-width:0">
+            <div class="log-card-name">${l.itemName}</div>
+            <div class="log-card-meta">${formatDate(l.date)}　${l.staff}</div>
+          </div>
+          <span class="log-card-qty ${isIn?'log-plus':'log-minus'}">${isIn?'入庫':'出庫'} ${isIn?'+':'-'}${l.qty}</span>
+        </div>
+        <div class="log-card-bottom">
+          <span class="log-card-note">${l.note||''}</span>
+          <button class="log-card-del" onclick="deleteLog(${originalIndex})">取消</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
 }
 
 function renderMasterList(type) {
