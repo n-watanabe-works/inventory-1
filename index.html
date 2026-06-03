@@ -858,14 +858,24 @@ function buildLogStaffChips() {
   ).join('');
 }
 
+function parseLogDate(dateStr) {
+  if (!dateStr) return 0;
+  // "2026/06/02 17:10" 形式も ISO形式も安全にパース
+  const t = new Date(dateStr).getTime();
+  return isNaN(t) ? 0 : t;
+}
+
 function renderLogs() {
-  buildLogStaffChips();
+  try {
+    buildLogStaffChips();
+  } catch (e) {}
   const q = (document.getElementById('log-search')?.value || '').toLowerCase();
   const tbody = document.getElementById('log-body');
+  if (!tbody) return;
   const filtered = logs.filter(l => {
     const matchType = logTypeFilter === 'all' || l.type === logTypeFilter;
     const matchStaff = logStaffFilter === 'すべて' || l.staff === logStaffFilter;
-    const matchQ = !q || l.itemName.toLowerCase().includes(q);
+    const matchQ = !q || (l.itemName || '').toLowerCase().includes(q);
     return matchType && matchStaff && matchQ;
   });
   const cardsEl = document.getElementById('log-cards');
@@ -874,11 +884,8 @@ function renderLogs() {
     if (cardsEl) cardsEl.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">該当する履歴がありません</div>';
     return;
   }
-  // 日付で降順ソート（最新が上）
-  const sorted = filtered.slice().sort((a, b) => {
-    const da = new Date(a.date), db = new Date(b.date);
-    return db - da;
-  });
+  // 日付で降順ソート（最新が上）※不正な日付でも落ちないようにする
+  const sorted = filtered.slice().sort((a, b) => parseLogDate(b.date) - parseLogDate(a.date));
   // PC用：表
   tbody.innerHTML = sorted.map(l => {
     const isIn = l.type==='in';
