@@ -441,6 +441,10 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
         <!-- スマホ用：カード形式 -->
         <div id="log-cards" class="log-cards"></div>
+        <!-- もっと見るボタン -->
+        <div id="log-loadmore-wrap" style="text-align:center;padding:16px 0;display:none">
+          <button id="log-loadmore-btn" onclick="loadAllLogs()" style="height:40px;padding:0 24px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#555;font-size:14px;cursor:pointer">過去の履歴をすべて表示</button>
+        </div>
       </div>
     </div>
 
@@ -772,6 +776,8 @@ function formatDate(dateStr, dateOnly = false) {
 }
 let logTypeFilter = 'all'; // ★ 宣言が抜けていたバグを修正
 let logStaffFilter = 'すべて';
+let logTotalCount = 0;      // GAS上の全ログ件数
+let logLoadedAll = false;   // 全件読み込み済みフラグ
 
 function setLogType(type) {
   logTypeFilter = type;
@@ -839,11 +845,10 @@ async function deleteLog(index) {
     }
   }
 
-  // ログを削除
-  logs.splice(index, 1);
-  if (gasConnected) {
-    // logsシートを全件上書き保存
-    gasPost({ action: 'saveLogs', logs }).catch(() => showToast('⚠️ 履歴の保存に失敗しました', true));
+  // ログを削除（★ 全件上書きではなくGAS側で1件だけ削除。読み込んでいない古いログを守る）
+  const removed = logs.splice(index, 1)[0];
+  if (gasConnected && removed) {
+    gasPost({ action: 'deleteLogEntry', log: removed }).catch(() => showToast('⚠️ 履歴の保存に失敗しました', true));
   }
   renderLogs();
   renderItems();
@@ -920,6 +925,45 @@ function renderLogs() {
         </div>
       </div>`;
     }).join('');
+  }
+
+  // 「もっと見る」ボタンの表示制御
+  const loadMoreWrap = document.getElementById('log-loadmore-wrap');
+  if (loadMoreWrap) {
+    // フィルター/検索なしで、まだ全件読み込んでいない場合だけ表示
+    const noFilter = (logTypeFilter === 'all' && logStaffFilter === 'すべて' && !q);
+    loadMoreWrap.style.display = (!logLoadedAll && noFilter) ? 'block' : 'none';
+  }
+}
+
+// ★ 過去ログをすべて読み込む（「もっと見る」ボタン用）
+async function loadAllLogs() {
+  if (!gasConnected) {
+    showToast('⚠️ オフラインのため読み込めません', true);
+    return;
+  }
+  const btn = document.getElementById('log-loadmore-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '読み込み中...'; }
+  try {
+    const result = await gasGet('getLogs'); // 全件取得
+    logs.length = 0;
+    (result.logs || []).forEach(l => logs.push({
+      itemId: l.itemId,
+      itemName: l.itemName,
+      type: l.type,
+      qty: parseInt(l.qty) || 0,
+      staff: l.staff,
+      date: l.date,
+      note: l.note || ''
+    }));
+    logTotalCount = logs.length;
+    logLoadedAll = true;
+    renderLogs();
+    showToast('✅ すべての履歴を読み込みました');
+  } catch (e) {
+    showToast('⚠️ 履歴の読み込みに失敗しました', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '過去の履歴をすべて表示'; }
   }
 }
 
@@ -2248,7 +2292,7 @@ async function loadFromSheet() {
       showToast('✅ スプレッドシートにデータを保存しました');
     }
 
-    // ログ
+    // ログ（★ 直近分のみ読み込み。総件数は result.logTotal を参照）
     logs.length = 0;
     if (result.logs && result.logs.length > 0) {
       result.logs.forEach(l => logs.push({
@@ -2261,6 +2305,8 @@ async function loadFromSheet() {
         note: l.note || ''
       }));
     }
+    logTotalCount = result.logTotal || logs.length;
+    logLoadedAll = (logs.length >= logTotalCount);
 
     // スタッフ
     if (result.staff && result.staff.length > 0) {
