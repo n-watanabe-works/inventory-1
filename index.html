@@ -796,7 +796,18 @@ function setLogStaff(staff) {
 async function deleteLog(index) {
   const log = logs[index];
   if (!log) return;
-  if (!await showConfirm(`この履歴を取り消しますか？\n${log.itemName}　${log.type==='in'?'入庫':'出庫'} ${log.qty}個\n※在庫数は自動で元に戻ります`, '取り消す', true)) return;
+  // ★ 取り消したときに在庫がどこに戻るかを判定してメッセージに明示
+  let backTo = '倉庫在庫';
+  if (log.type === 'out') {
+    if (log.note && log.note.includes('車に積込')) backTo = '倉庫在庫';
+    else if (log.note && log.note.includes('原状回復')) backTo = '倉庫在庫';
+    else if (log.note && (log.note.includes('販売') || log.note.includes('納品') || log.note.includes('使用（見積もり作業）'))) backTo = '車載在庫';
+    else backTo = '倉庫在庫';
+  } else {
+    if (log.note && log.note.includes('車載から入庫')) backTo = '車載在庫';
+    else backTo = '倉庫在庫';
+  }
+  if (!await showConfirm(`この履歴を取り消しますか？\n${log.itemName}　${log.type==='in'?'入庫':'出庫'} ${log.qty}個\n※${backTo}に${log.qty}個戻ります`, '取り消す', true)) return;
 
   // 在庫を元に戻す
   const item = items.find(i => i.id === log.itemId);
