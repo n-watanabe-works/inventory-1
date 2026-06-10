@@ -1844,6 +1844,7 @@ function renderRestoration() {
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700;margin-bottom:4px">${p.name}</div>
           <div style="font-size:12px;color:#888">📅 ${formatDate(p.date, true)}　👤 ${p.staff}</div>
+          ${p.status === 'done' && p.completedAt ? `<div style="font-size:12px;color:#2e7d32;margin-top:2px">✅ ${formatDate(p.completedAt)} 完了（${p.completedBy || '不明'}）</div>` : ''}
         ${p.memo ? `<div style="font-size:12px;color:#555;margin-top:4px">📝 ${p.memo}</div>` : ''}
         </div>
         <span style="font-size:11px;padding:3px 10px;border-radius:99px;background:${statusColor}20;color:${statusColor};font-weight:600;white-space:nowrap">${statusLabel}</span>
@@ -2143,7 +2144,17 @@ function recalcRestorationStock() {
 
 function toggleProjectStatus(projectId) {
   const p = projects.find(p => p.id === projectId);
-  p.status = p.status === 'done' ? 'active' : 'done';
+  if (p.status === 'done') {
+    // 進行中に戻す → 完了情報をクリア
+    p.status = 'active';
+    p.completedAt = '';
+    p.completedBy = '';
+  } else {
+    // 完了にする → 完了日時・完了者を記録（案②）
+    p.status = 'done';
+    p.completedAt = now();
+    p.completedBy = currentUser || 'スタッフ未設定';
+  }
   // ★ ステータス変更後に再計算（GAS送信なし）
   recalcRestorationStock();
   // 関連品目のみ updateStock 送信してから saveProjects
@@ -2333,6 +2344,8 @@ async function loadFromSheet() {
           memo: p.memo || '',
           status: p.status || 'active',
           createdAt: p.createdAt || '',
+          completedAt: p.completedAt || '',
+          completedBy: p.completedBy || '',
           usedItems
         });
       });
