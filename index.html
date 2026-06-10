@@ -328,6 +328,7 @@ input[type=number] { -moz-appearance: textfield; }
         <div class="summary-card"><div class="summary-label">総品目数</div><div class="summary-value" id="total-items">-</div></div>
         <div class="summary-card" id="zero-card" onclick="toggleZeroFilter()" style="cursor:pointer" title="クリックで在庫ゼロのみ表示"><div class="summary-label">在庫ゼロ</div><div class="summary-value" style="color:#c0392b" id="zero-items">-</div></div>
         <div class="summary-card" id="alert-card" onclick="toggleAlertFilter()" style="cursor:pointer" title="クリックで在庫少のみ表示"><div class="summary-label">在庫少（要発注）</div><div class="summary-value" style="color:#e67e22" id="alert-items">-</div></div>
+        <div class="summary-card" id="fav-card" onclick="toggleFavoriteFilter()" style="cursor:pointer" title="クリックで★重要機材のみ表示"><div class="summary-label">★ 重要機材</div><div class="summary-value" style="color:#e8a800" id="fav-items">-</div></div>
         <div class="summary-card"><div class="summary-label">設備種類</div><div class="summary-value" id="cat-count">-</div></div>
       </div>
       <div class="filter-area">
@@ -587,7 +588,7 @@ input[type=number] { -moz-appearance: textfield; }
 
 <script>
 const ITEMS_DATA = [{"id": 10002, "name": "サニタリー吸気フィルター", "category": "換気設備", "properties": ["フォレシス"], "stock": 0, "memo": "完売したら今後発注なし。155×155"}, {"id": 10003, "name": "サニタリー吸気フィルター/AT-100QKF2-F", "category": "換気設備", "properties": ["フォレシス", "タワーズ", "ナビューレ"], "stock": 46, "memo": "サランネット、ナビューレの給気フィルタ小を使用"}, {"id": 10004, "name": "玄関給気フィルター", "category": "換気設備", "properties": ["フォレシス"], "stock": 34, "memo": "195×195"}, {"id": 10005, "name": "電動給気シャッター/AT-150TQEF2", "category": "換気設備", "properties": ["フォレシス"], "stock": 4, "memo": ""}, {"id": 10006, "name": "トイレ換気扇", "category": "換気設備", "properties": ["フォレシス"], "stock": 2, "memo": "VD-10ZC14-C"}, {"id": 10007, "name": "給排気グリル", "category": "換気設備", "properties": ["フォレシス", "ナビューレ"], "stock": 5, "memo": ""}, {"id": 10008, "name": "ベント(中間)ファンモータ−", "category": "換気設備", "properties": ["フォレシス"], "stock": 3, "memo": "VF-3HTPCRM-ATC　製造番号:99020307"}, {"id": 10009, "name": "居室用換気フィルター小（黒）", "category": "換気設備", "properties": ["タワーズ"], "stock": 0, "memo": ""}, {"id": 10010, "name": "給排気グリル", "category": "換気設備", "properties": ["タワーズ"], "stock": 0, "memo": "P-13GLF4　現行品：P-13GLF6"}, {"id": 10011, "name": "サニタリー吸気フィルター大", "category": "換気設備", "properties": ["ナビューレ"], "stock": 35, "memo": "AT-150QKF2-F"}, {"id": 10012, "name": "サニタリー吸気フィルター小", "category": "換気設備", "properties": ["ナビューレ"], "stock": 44, "memo": ""}, {"id": 10013, "name": "玄関給気側フィルター", "category": "換気設備", "properties": ["ナビューレ"], "stock": 20, "memo": "PS-300（ﾐｼﾝ加工 ・ﾚｻﾞｰ無）200角"}, {"id": 10014, "name": "給排気グリル", "category": "換気設備", "properties": ["ナビューレ"], "stock": 0, "memo": ""}, {"id": 10015, "name": "外気浄化フィルター（標準）", "category": "換気設備", "properties": ["ブリリア"], "stock": 23, "memo": ""}, {"id": 10016, "name": "外気浄化フィルター（花粉対策）(ﾌﾞﾘﾘｱ）", "category": "換気設備", "properties": ["ブリリア"], "stock": 15, "memo": ""}, {"id": 10017, "name": "ロスナイ給気側フィルター★純正品", "category": "ロスナイ", "properties": ["フォレシス", "ナビューレ"], "stock": 2, "memo": "M45 300 717　　　ナビューレと同じ　袋づめ"}, {"id": 10018, "name": "ロスナイ給気側フィルター★同等品", "category": "ロスナイ", "properties": ["フォレシス", "ナビューレ"], "stock": 48, "memo": "PS-300 120×450　　ナビューレと同じ"}, {"id": 10019, "name": "ロスナイ排気側フィルター", "category": "ロスナイ", "properties": ["フォレシス", "ナビューレ"], "stock": 17, "memo": "M36 324 718　ナビューレと同じ"}, {"id": 10020, "name": "ロスナイ高性能除じんフィルター", "category": "ロスナイ", "properties": ["フォレシス", "ナビューレ"], "stock": 15, "memo": "M35 843 717　ナビューレと同じ"}, {"id": 10021, "name": "ロスナイ防虫フィルター", "category": "ロスナイ", "properties": ["フォレシス", "ナビューレ"], "stock": 10, "memo": "M36 324 717　ナビューレと同じ"}, {"id": 10022, "name": "ロスナイエレメント", "category": "ロスナイ", "properties": ["フォレシス", "ナビューレ"], "stock": 17, "memo": "M36 327 719 　120×450　ナビューレと同じ、※25.6供給終了"}, {"id": 10023, "name": "ロスナイモータ M36258 451", "category": "ロスナイ", "properties": ["フォレシス", "ナビューレ"], "stock": 30, "memo": "M36258451・452　ナビューレと同じ　※26.3 供給終了"}, {"id": 10024, "name": "ロスナイモータ M36258 452", "category": "ロスナイ", "properties": ["フォレシス", "ナビューレ"], "stock": 33, "memo": ""}, {"id": 10025, "name": "ロスナイファン", "category": "ロスナイ", "properties": ["フォレシス", "ナビューレ", "タワーズ"], "stock": 0, "memo": "M36093481"}, {"id": 10026, "name": "給排気側フィルターP-50F/M36 093 717", "category": "ロスナイ", "properties": ["タワーズ"], "stock": 31, "memo": "2枚１セットで販売"}, {"id": 10027, "name": "給排気側フィルターP-30F/M35 003 719", "category": "ロスナイ", "properties": ["タワーズ"], "stock": 20, "memo": ""}, {"id": 10028, "name": "給排気側フィルター枠P-30枠(2個)/M35 146 717", "category": "ロスナイ", "properties": ["タワーズ"], "stock": 6, "memo": ""}, {"id": 10029, "name": "ﾛｽﾅｲﾓｰﾀ-(VL-200,150ZM用)M36096451/452", "category": "ロスナイ", "properties": ["タワーズ"], "stock": 0, "memo": "451は生産終了・452のみ在庫有"}, {"id": 10030, "name": "ﾛｽﾅｲﾓｰﾀ-ﾍﾞｱﾘﾝｸﾞ(VL-200,150ZM用)M36096451/452", "category": "ロスナイ", "properties": ["タワーズ"], "stock": 0, "memo": ""}, {"id": 10031, "name": "ロスナイエレメント/M36 095 710", "category": "ロスナイ", "properties": ["タワーズ"], "stock": 8, "memo": "25.7 供給終了"}, {"id": 10032, "name": "ロスナイファン/M36 093 480", "category": "ロスナイ", "properties": ["タワーズ"], "stock": 4, "memo": "黒"}, {"id": 10033, "name": "ロスナイモータ M36258453・454", "category": "ロスナイ", "properties": ["ナビューレ"], "stock": 21, "memo": "倉庫に453・23個　454・23個"}, {"id": 10034, "name": "FCU用＃100＃200?C約460mm×160mm", "category": "ファンコイル", "properties": ["フォレシス"], "stock": 34, "memo": "PS-300"}, {"id": 10035, "name": "FCU用＃300?D 約560mm×160mm", "category": "ファンコイル", "properties": ["フォレシス"], "stock": 54, "memo": "PS-300"}, {"id": 10036, "name": "FCU用#400?E 約660mm×160mm", "category": "ファンコイル", "properties": ["フォレシス", "タワーズ"], "stock": 50, "memo": "PS-300　タワーズと同じ"}, {"id": 10037, "name": "FCU用#600?G 約860mm×160mm", "category": "ファンコイル", "properties": ["フォレシス", "タワーズ"], "stock": 4, "memo": "PS-300　タワーズと同じ"}, {"id": 10038, "name": "二方弁電動バルブ65FBW-1F-04-15", "category": "ファンコイル", "properties": ["フォレシス"], "stock": 16, "memo": ""}, {"id": 10039, "name": "二方弁電動バルブ65FBW-1F-04-20", "category": "ファンコイル", "properties": ["フォレシス"], "stock": 9, "memo": "デフォルトは15"}, {"id": 10040, "name": "二方弁電動バルブ61FBW-1Ｒ08-20", "category": "ファンコイル", "properties": ["フォレシス"], "stock": 3, "memo": ""}, {"id": 10041, "name": "FCUリモコン本体", "category": "ファンコイル", "properties": ["フォレシス"], "stock": 13, "memo": ""}, {"id": 10042, "name": "FCUリモコンカバーRBB-CN用", "category": "ファンコイル", "properties": ["フォレシス"], "stock": 44, "memo": "No.31421、2026/03/26 車内リモコンは未カウント"}, {"id": 10043, "name": "ﾌｧﾝｺｲﾙﾊﾟﾜｰﾕﾆｯﾄ基盤　RBB-PT-LS", "category": "ファンコイル", "properties": ["フォレシス"], "stock": 4, "memo": ""}, {"id": 10044, "name": "吹出口(600×135)", "category": "ファンコイル", "properties": ["フォレシス"], "stock": 0, "memo": ""}, {"id": 10045, "name": "FCU#200　約410mm×155mm", "category": "ファンコイル", "properties": ["タワーズ"], "stock": 18, "memo": ""}, {"id": 10046, "name": "FCU#300　約510mm×155mm", "category": "ファンコイル", "properties": ["タワーズ"], "stock": 50, "memo": ""}, {"id": 10047, "name": "FCUリモコン本体/BRC315C1", "category": "ファンコイル", "properties": ["タワーズ", "ブリリア"], "stock": 9, "memo": "ブリリアと同じ、本体のみ交換可"}, {"id": 10048, "name": "二方弁電動バルブ61FBW-1R-08-20", "category": "ファンコイル", "properties": ["タワーズ", "ブリリア"], "stock": 6, "memo": "ブリリアと同じ"}, {"id": 10049, "name": "FCUファンモーター", "category": "ファンコイル", "properties": ["タワーズ"], "stock": 5, "memo": "モーター番号：10SA-10"}, {"id": 10050, "name": "エアフィルター＃200(478×235)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 11, "memo": ""}, {"id": 10051, "name": "エアフィルター＃300(576×235)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 11, "memo": ""}, {"id": 10052, "name": "エアフィルター＃400(678×235)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 22, "memo": ""}, {"id": 10053, "name": "エアフィルター＃600(898×235)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 13, "memo": ""}, {"id": 10054, "name": "エアフィルター＃800(1371×235)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 22, "memo": ""}, {"id": 10055, "name": "エアフィルター特注1(508×63)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 9, "memo": ""}, {"id": 10056, "name": "エアフィルター特注1(363×108)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 10, "memo": ""}, {"id": 10057, "name": "エアフィルター特注1(463×108)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 2, "memo": ""}, {"id": 10058, "name": "エアフィルター特注1(513×156)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 10, "memo": ""}, {"id": 10059, "name": "エアフィルター特注1(263×158)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 0, "memo": ""}, {"id": 10060, "name": "エアフィルター特注1(213×208)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 2, "memo": ""}, {"id": 10061, "name": "エアフィルター特注2(663×108)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 9, "memo": ""}, {"id": 10062, "name": "エアフィルター特注2(708×63)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 1, "memo": ""}, {"id": 10063, "name": "エアフィルター特注2(708×158)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 0, "memo": ""}, {"id": 10064, "name": "エアフィルター特注2(963×108)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 2, "memo": ""}, {"id": 10065, "name": "エアフィルター特注2(963×158)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 0, "memo": "2026/03/26 ない？"}, {"id": 10066, "name": "エアフィルター特注2(1313×108)", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 2, "memo": ""}, {"id": 10067, "name": "ファン", "category": "ファンコイル", "properties": ["ブリリア"], "stock": 4, "memo": ""}, {"id": 10068, "name": "エアフィルター＃200", "category": "ファンコイル", "properties": ["ブランズ"], "stock": 5, "memo": ""}, {"id": 10069, "name": "エアフィルター＃300", "category": "ファンコイル", "properties": ["ブランズ"], "stock": 25, "memo": "＃800(＃400＋＃300)"}, {"id": 10070, "name": "エアフィルター＃400", "category": "ファンコイル", "properties": ["ブランズ"], "stock": 10, "memo": "＃800(＃400＋＃300)"}, {"id": 10071, "name": "エアフィルター＃600", "category": "ファンコイル", "properties": ["ブランズ"], "stock": 4, "memo": ""}, {"id": 10072, "name": "ファンコイルモーターFWHC４CHR/ 2338129", "category": "ファンコイル", "properties": ["ブランズ"], "stock": 5, "memo": ""}, {"id": 10073, "name": "ファンモーター/61A00607", "category": "ファンコイル", "properties": ["ブリリアタワーズ目黒"], "stock": 2, "memo": ""}, {"id": 10074, "name": "ファンコイルモーター(ファン電動機)M18644316", "category": "ファンコイル", "properties": ["ブリリアタワーズ目黒"], "stock": 5, "memo": ""}, {"id": 10075, "name": "アレルゲンHEPAフィルター", "category": "エアコン", "properties": ["ナビューレ"], "stock": 27, "memo": "2個1セット（袋入り）"}, {"id": 10076, "name": "MLZ-RX28・56RAS用ファンモーター", "category": "エアコン", "properties": ["ナビューレ"], "stock": 2, "memo": "ファンモーター/M21 L9V 300 51A09\n28RAS・56RAS兼用"}, {"id": 10077, "name": "フィレドン　PS-300（120×450）", "category": "エアコン", "properties": ["ナビューレ"], "stock": 14, "memo": ""}, {"id": 10078, "name": "エアコンリモコン/M21EG0426", "category": "エアコン", "properties": ["ナビューレ"], "stock": 0, "memo": "MLZ-225AS、MLZ-22RAS、MLZ-25RAS、MLZ-RX22RAS、MLZ-RX25RAS、MLZ-RX28RAS、MLZ-RX36RAS、MLZ-RX40RAS、MLZ-RX50RAS、MLZ-RX56RAS"}, {"id": 10079, "name": "バス乾燥機フィルター長 末尾008", "category": "浴室", "properties": ["フォレシス"], "stock": 26, "memo": ""}, {"id": 10080, "name": "バス乾燥機フィルター短 末尾004", "category": "浴室", "properties": ["フォレシス", "タワーズ"], "stock": 13, "memo": "タワーズと同じ"}, {"id": 10081, "name": "追焚配管用薬剤", "category": "浴室", "properties": ["全て"], "stock": 0, "memo": "発注は5セットずつのみ可"}, {"id": 10082, "name": "キッチン給気フィルター約20cm×20cm", "category": "キッチン", "properties": ["フォレシス"], "stock": 17, "memo": "PS-600 230×230枠付き"}, {"id": 10083, "name": "レンジフード用グリスフィルター3枚１組ネジ付き", "category": "キッチン", "properties": ["フォレシス", "タワーズ"], "stock": 2, "memo": "ネジ付3・無4　在庫３販売後はネジ無"}, {"id": 10084, "name": "浄水器カートリッジ", "category": "キッチン", "properties": ["フォレシス", "タワーズ"], "stock": 322, "memo": "内事務ストック3"}, {"id": 10085, "name": "レンジフード用ダンパーモータ", "category": "キッチン", "properties": ["フォレシス"], "stock": 5, "memo": "FMSR-2"}, {"id": 10086, "name": "レンジフード用ファンモータ", "category": "キッチン", "properties": ["フォレシス"], "stock": 6, "memo": "VFB-SE4PMX用"}, {"id": 10087, "name": "キッチンファン", "category": "キッチン", "properties": ["フォレシス"], "stock": 2, "memo": ""}, {"id": 10088, "name": "ﾚﾝｼﾞﾌｰﾄﾞ操作ｽｲｯﾁ　ﾀｲﾌﾟX", "category": "キッチン", "properties": ["フォレシス"], "stock": 3, "memo": ""}, {"id": 10089, "name": "キッチン給気フィルター（黒)", "category": "キッチン", "properties": ["タワーズ"], "stock": 26, "memo": ""}, {"id": 10090, "name": "キッチン給気フィルター（白）", "category": "キッチン", "properties": ["タワーズ"], "stock": 29, "memo": "FC620N 225×225"}, {"id": 10091, "name": "レンジフード用フィルター（3枚1ｾｯﾄ）", "category": "キッチン", "properties": ["タワーズ"], "stock": 30, "memo": "在庫はｾｯﾄ数"}, {"id": 10092, "name": "レンジフード用フィルター枠（ｱｲﾎﾞﾘｰ）", "category": "キッチン", "properties": ["タワーズ"], "stock": 1, "memo": ""}, {"id": 10093, "name": "キッチン給排気グリル", "category": "キッチン", "properties": ["タワーズ"], "stock": 0, "memo": "P-23GLF4　現行品：P-23GLF6"}, {"id": 10094, "name": "キッチン給気フィルター", "category": "キッチン", "properties": ["ナビューレ"], "stock": 0, "memo": ""}, {"id": 10095, "name": "レンジフード用グリスフィルター/CSF17-4861", "category": "キッチン", "properties": ["ナビューレ"], "stock": 17, "memo": ""}, {"id": 10096, "name": "排気ダンパーリング", "category": "キッチン", "properties": ["ナビューレ"], "stock": 3, "memo": ""}, {"id": 10097, "name": "グリスフィルター/SGF−611NRH", "category": "キッチン", "properties": ["ブリリア"], "stock": 5, "memo": "109R5200"}, {"id": 10098, "name": "グリスフィルター　CSF16-4001", "category": "キッチン", "properties": ["ブリリア"], "stock": 1, "memo": ""}];
-const items = ITEMS_DATA.map(i => ({...i, properties: [...i.properties], minStock: 0, orderStatus: '', carStock: 0, restorationStock: 0}));
+const items = ITEMS_DATA.map(i => ({...i, properties: [...i.properties], minStock: 0, orderStatus: '', carStock: 0, restorationStock: 0, favorite: false}));
 const logs = [];
 let categories = ["エアコン", "キッチン", "ファンコイル", "ロスナイ", "換気設備", "浴室"];
 let allProperties = ["タワーズ", "ナビューレ", "フォレシス", "ブランズ", "ブリリア", "ブリリアタワーズ目黒"];
@@ -646,27 +647,57 @@ function setProp(prop) { activeProp = prop; buildFilters(); renderItems(); }
 
 let filterZeroOnly = false;
 let filterAlertOnly = false;
+let filterFavoriteOnly = false;
 let stocktakeActiveCat = 'すべて';
 
 function toggleZeroFilter() {
   filterZeroOnly = !filterZeroOnly;
   filterAlertOnly = false;
+  filterFavoriteOnly = false;
   const card = document.getElementById('zero-card');
   card.style.background = filterZeroOnly ? '#fde8e8' : '';
   card.style.borderColor = filterZeroOnly ? '#f0c0c0' : '';
   document.getElementById('alert-card').style.background = '';
   document.getElementById('alert-card').style.borderColor = '';
+  document.getElementById('fav-card').style.background = '';
+  document.getElementById('fav-card').style.borderColor = '';
   renderItems();
 }
 
 function toggleAlertFilter() {
   filterAlertOnly = !filterAlertOnly;
   filterZeroOnly = false;
+  filterFavoriteOnly = false;
   const card = document.getElementById('alert-card');
   card.style.background = filterAlertOnly ? '#fef3e2' : '';
   card.style.borderColor = filterAlertOnly ? '#ffcc80' : '';
   document.getElementById('zero-card').style.background = '';
   document.getElementById('zero-card').style.borderColor = '';
+  document.getElementById('fav-card').style.background = '';
+  document.getElementById('fav-card').style.borderColor = '';
+  renderItems();
+}
+
+function toggleFavoriteFilter() {
+  filterFavoriteOnly = !filterFavoriteOnly;
+  filterZeroOnly = false;
+  filterAlertOnly = false;
+  const card = document.getElementById('fav-card');
+  card.style.background = filterFavoriteOnly ? '#fffbe6' : '';
+  card.style.borderColor = filterFavoriteOnly ? '#ffe066' : '';
+  document.getElementById('zero-card').style.background = '';
+  document.getElementById('zero-card').style.borderColor = '';
+  document.getElementById('alert-card').style.background = '';
+  document.getElementById('alert-card').style.borderColor = '';
+  renderItems();
+}
+
+// ★ お気に入り（重要機材）の ON/OFF を切り替え
+function toggleFavorite(itemId) {
+  const item = items.find(i => i.id === itemId);
+  if (!item) return;
+  item.favorite = !item.favorite;
+  if (gasConnected) gasPost({ action: 'updateItem', item }).catch(() => showToast('⚠️ ★の保存に失敗しました', true));
   renderItems();
 }
 
@@ -701,11 +732,15 @@ function renderItems() {
     const matchQ = !q || i.name.toLowerCase().includes(q) || String(i.id).includes(q);
     const matchZero = !filterZeroOnly || i.stock===0;
     const matchAlert = !filterAlertOnly || (i.minStock > 0 && i.stock <= i.minStock && i.stock > 0);
-    return matchCat && matchProp && matchQ && matchZero && matchAlert;
+    const matchFav = !filterFavoriteOnly || i.favorite;
+    return matchCat && matchProp && matchQ && matchZero && matchAlert && matchFav;
   });
+  // ★ 星付き（重要機材）を常に上部に固定（B案）
+  filtered.sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
   document.getElementById('total-items').textContent = items.length;
   document.getElementById('zero-items').textContent = items.filter(i => i.stock===0).length;
   document.getElementById('alert-items').textContent = items.filter(i => i.minStock > 0 && i.stock > 0 && i.stock <= i.minStock).length;
+  document.getElementById('fav-items').textContent = items.filter(i => i.favorite).length;
   document.getElementById('cat-count').textContent = categories.length;
   document.getElementById('last-updated').textContent = '最終更新：' + now();
   const list = document.getElementById('item-list');
@@ -737,7 +772,10 @@ function renderItems() {
       </div>`;
     return `<div class="item-card">
       <div class="item-header">
-        <div style="flex:1;min-width:0"><div class="item-name">${item.name}</div><div class="item-id">ID: ${item.id}</div></div>
+        <div style="flex:1;min-width:0;display:flex;align-items:flex-start;gap:6px">
+          <button onclick="toggleFavorite(${item.id})" title="重要機材として登録" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;padding:0;flex-shrink:0;color:${item.favorite ? '#f5b800' : '#ccc'}">${item.favorite ? '★' : '☆'}</button>
+          <div style="flex:1;min-width:0"><div class="item-name">${item.name}</div><div class="item-id">ID: ${item.id}</div></div>
+        </div>
         <div class="item-stock">
           <div class="stock-num ${isZero?'stock-zero':''}" style="${isAlert&&item.stock>0?'color:#e67e22':''}">${total}</div>
           <div class="stock-unit">合計</div>
@@ -1372,7 +1410,7 @@ function saveForm() {
   const minStock = parseInt(document.getElementById('form-minstock').value)||0;
   const memo = document.getElementById('form-memo').value.trim();
   if (formMode==='add') {
-    const newItem = { id: nextId++, name, category, properties: selectedProps, stock, minStock, memo, orderStatus: '', carStock: 0 };
+    const newItem = { id: nextId++, name, category, properties: selectedProps, stock, minStock, memo, orderStatus: '', carStock: 0, favorite: false };
     items.push(newItem);
     if (gasConnected) gasPost({ action: 'addItem', item: newItem }).catch(() => showToast('⚠️ 追加の同期に失敗しました', true));
   } else {
@@ -1626,7 +1664,7 @@ function importCSV() {
       Object.assign(existing, { name, category, properties, stock, minStock, memo });
       updated++;
     } else {
-      items.push({ id, name, category, properties, stock, minStock, memo, orderStatus: '' });
+      items.push({ id, name, category, properties, stock, minStock, memo, orderStatus: '', favorite: false });
       added++;
       if (id >= nextId) nextId = id + 1;
     }
@@ -2303,7 +2341,8 @@ async function loadFromSheet() {
           minStock: parseInt(i.minStock) || 0,
           orderStatus: i.orderStatus || '',
           memo: i.memo || '',
-          restorationStock: parseInt(i.restorationStock) || 0
+          restorationStock: parseInt(i.restorationStock) || 0,
+          favorite: i.favorite === true || i.favorite === 'true' || i.favorite === 1 || i.favorite === '1'
         });
       });
       gasConnected = true;
